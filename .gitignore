@@ -1,0 +1,30 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv/
+
+# Test, type-checker, and linter caches
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.pyright/
+.coverage
+htmlcov/
+
+# IDE-local settings
+.idea/
+
+# Local secrets and configuration
+.env
+.env.*
+!.env.example
+
+# Generated content
+output/*
+!output/.gitkeep
