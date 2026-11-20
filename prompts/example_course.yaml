@@ -1,0 +1,37 @@
+# Replace these example instructions with your own topic and learning goals.
+guide_structure:
+  sections:
+    - id: SEC-01
+      title: Orientation
+      map_location: Start of the course
+      purpose: Give the learner a map of the subject and its main parts.
+      topics:
+        - What the subject covers
+        - How its main parts connect
+      assignment_connection: Identify where an assigned task fits on the map.
+      activity: Draw or write a short map of the subject.
+      layout:
+        - Brief overview
+        - Text-based map
+        - Practice prompt
+    - id: SEC-02
+      title: First application
+      map_location: After orientation
+      purpose: Apply one idea from the map to a small task.
+      topics:
+        - Choosing a relevant idea
+        - Checking the result
+      assignment_connection: Use the idea on a small part of the assigned task.
+      activity: Try the idea, then explain what happened.
+      layout:
+        - Worked example
+        - Practice prompt
+        - Reflection
+section_template:
+  required_blocks:
+    - order: 1
+      name: Location
+      instruction: Explain where this section fits in the course map.
+    - order: 2
+      name: Practice
+      instruction: Give the learner one small action to try.

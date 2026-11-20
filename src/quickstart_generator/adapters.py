@@ -4,13 +4,13 @@ from pathlib import Path
 
 from openai_codex import Codex, Sandbox
 
-from java_quickstart_generator.course_spec import CourseSection, CourseSpec
-from java_quickstart_generator.models import (
+from quickstart_generator.course_spec import CourseSection, CourseSpec
+from quickstart_generator.models import (
     AgentResponse,
     GeneratorConfig,
     ModulePart,
 )
-from java_quickstart_generator.prompt_template import PromptTemplate, load_prompt_template
+from quickstart_generator.prompt_template import PromptTemplate, load_prompt_template
 
 
 class GenerationError(RuntimeError):
@@ -72,7 +72,7 @@ class CodexAgent:
 
 
 class MarkdownWriter:
-    """Write one generated module part as Markdown."""
+    """Write one generated section as Markdown."""
 
     def write_artifact(
         self,

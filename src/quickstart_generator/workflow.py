@@ -1,15 +1,15 @@
-"""Minimal orchestration for generating ordered guide modules."""
+"""Minimal orchestration for generating ordered course sections."""
 
 from collections.abc import Sequence
 from pathlib import Path
 
-from java_quickstart_generator.course_spec import load_course_spec
-from java_quickstart_generator.models import (
+from quickstart_generator.course_spec import load_course_spec
+from quickstart_generator.models import (
     GenerationOutcome,
     GeneratorConfig,
     ModulePart,
 )
-from java_quickstart_generator.roles import (
+from quickstart_generator.roles import (
     BuildsSectionPrompt,
     RunsAgent,
     WritesArtifact,

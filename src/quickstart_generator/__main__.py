@@ -8,17 +8,17 @@ from typing import cast
 
 from openai_codex import CodexError
 
-from java_quickstart_generator.adapters import (
+from quickstart_generator.adapters import (
     CodexAgent,
     GenerationError,
     GuidePromptBuilder,
     MarkdownWriter,
 )
-from java_quickstart_generator.models import GeneratorConfig
-from java_quickstart_generator.prompt_template import load_prompt_template
-from java_quickstart_generator.workflow import generate_yaml_course
+from quickstart_generator.models import GeneratorConfig
+from quickstart_generator.prompt_template import load_prompt_template
+from quickstart_generator.workflow import generate_yaml_course
 
-DEFAULT_GUIDE_SPEC = Path("prompts/guide_spec.yaml")
+DEFAULT_GUIDE_SPEC = Path("prompts/example_course.yaml")
 DEFAULT_DRAFTS_DIRECTORY = Path("drafts")
 
 
@@ -44,9 +44,9 @@ def build_parser() -> argparse.ArgumentParser:
     """Create the parser without reading arguments or running generation."""
 
     parser = argparse.ArgumentParser(
-        prog="java-quickstart-generator",
+        prog="quickstart-generator",
         description=(
-            "Generate one or more Java Quickstart modules from a YAML course specification "
+            "Generate one or more sections from a YAML course specification "
             "using one Codex thread for the complete course run."
         ),
     )
@@ -105,7 +105,7 @@ def parse_args(argv: list[str] | None = None) -> CliArguments:
 
 
 def run_generation(arguments: CliArguments) -> int:
-    """Compose concrete adapters and generate the requested course modules."""
+    """Compose concrete adapters and generate the requested course sections."""
 
     module_label = ", ".join(arguments.module_ids) or "all sections"
     try:
@@ -122,12 +122,12 @@ def run_generation(arguments: CliArguments) -> int:
         # This local PoC prints exception text for diagnosis. Sanitize it before broader use
         # because future SDK messages could contain sensitive details.
         print(
-            f"Could not generate course modules {module_label}: {error}",
+            f"Could not generate course sections {module_label}: {error}",
             file=sys.stderr,
         )
         return 1
 
-    print(f"Generated {len(outcomes)} draft(s) for course modules {module_label}:")
+    print(f"Generated {len(outcomes)} draft(s) for course sections {module_label}:")
     for outcome in outcomes:
         print(f"  {outcome.artifact_path}")
     print(f"Codex thread: {outcomes[-1].thread_id}")

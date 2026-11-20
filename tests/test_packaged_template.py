@@ -30,10 +30,10 @@ def test_installed_wheel_loads_default_outside_repository(tmp_path: Path) -> Non
     )
     script = """
 from pathlib import Path
-import java_quickstart_generator
-from java_quickstart_generator.course_spec import CourseSection, CourseSpec
-from java_quickstart_generator.adapters import GuidePromptBuilder
-assert Path(java_quickstart_generator.__file__).is_relative_to(Path('installed').resolve())
+import quickstart_generator
+from quickstart_generator.course_spec import CourseSection, CourseSpec
+from quickstart_generator.adapters import GuidePromptBuilder
+assert Path(quickstart_generator.__file__).is_relative_to(Path('installed').resolve())
 section = CourseSection(
     'SEC-01', 'Title', 'MAP-1', 'Purpose', ('Topic',), 'Apply', 'Trace', ('Layout',)
 )

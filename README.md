@@ -1,6 +1,6 @@
-# Java Quickstart Generator
+# Quickstart Generator
 
-A small Python proof of concept for generating a modular Java refresher with the OpenAI Codex
+A small Python proof of concept for generating modular quickstart content with the OpenAI Codex
 SDK. It runs one or more ordered sections in a single Codex thread and saves each response as a
 separate Markdown draft for human review.
 
@@ -43,28 +43,34 @@ dependencies with the system Python or system `pip`.
 Show the available arguments without running generation:
 
 ```shell
-uv run java-quickstart-generator --help
+uv run quickstart-generator --help
 ```
 
 The equivalent module command is:
 
 ```shell
-uv run python -m java_quickstart_generator --help
+uv run python -m quickstart_generator --help
 ```
 
 The following generation commands invoke the configured Codex service. They may require
 authentication and may consume service resources.
 
-Generate every section in YAML list order:
+Generate the two sections in the bundled example, in YAML list order:
 
 ```shell
-uv run java-quickstart-generator --course-spec prompts/guide_spec.yaml
+uv run quickstart-generator
 ```
 
-Generate selected sections in the order entered:
+Generate selected example sections in the order entered:
 
 ```shell
-uv run java-quickstart-generator SEC-01 SEC-02 --course-spec prompts/guide_spec.yaml
+uv run quickstart-generator SEC-02 SEC-01
+```
+
+Generate from your own YAML specification:
+
+```shell
+uv run quickstart-generator --course-spec prompts/guide_spec.yaml
 ```
 
 Optional arguments:
@@ -72,7 +78,7 @@ Optional arguments:
 | Argument | Default | Meaning |
 |---|---|---|
 | `SEC_ID ...` | All sections | Select sections in requested order |
-| `--course-spec PATH` | `prompts/guide_spec.yaml` | YAML course source |
+| `--course-spec PATH` | `prompts/example_course.yaml` | YAML course source |
 | `--prompt-template PATH` | Bundled Markdown template | Custom prompt wording and arrangement |
 | `--drafts-directory PATH` | `drafts` | Destination for drafts |
 | `--model MODEL` | Configured Codex default | Model override |
@@ -84,13 +90,14 @@ safe `id`, `title`, `map_location`, `purpose`, `topics`, `assignment_connection`
 `instruction` for each block.
 
 The first turn receives the complete specification. Later turns receive the current section,
-shared section blocks, and continuity rules. Each draft is written to
+shared section blocks, and continuity rules in the same Codex thread. Each draft is written to
 `drafts/<SECTION_ID>/01-section.md`. Move an existing draft before generating that section again.
 
-The local `prompts/guide_spec.yaml` contains a personal learner profile and is ignored by Git.
-Supply your own specification when using a fresh clone. The old Markdown prompt directories are
-not used by the CLI. Drafts remain visible to Git; review their contents before committing.
-`output/` remains reserved for future exports.
+The tracked `prompts/example_course.yaml` is a small, topic-neutral example available in a fresh
+clone. Copy it to another path and edit its sections to describe your own course. On this machine,
+`prompts/guide_spec.yaml` is an ignored personal specification; it is absent from a fresh clone.
+Select a personal file explicitly with `--course-spec`. Drafts remain visible to Git; review
+their contents before committing. `output/` remains reserved for future exports.
 
 ## Customize the prompt
 
@@ -99,7 +106,7 @@ instructions and how section data appears in each prompt. Edit a copy of the tem
 change those instructions without editing Python.
 
 The default is bundled at
-`src/java_quickstart_generator/templates/course_prompt.md`. It also ships inside the installed
+`src/quickstart_generator/templates/course_prompt.md`. It also ships inside the installed
 package and loads independently of the working directory. Custom template and course-spec paths
 are resolved from your working directory. The template is loaded and validated once per run;
 edits made during a run apply to the next run.
@@ -107,22 +114,21 @@ edits made during a run apply to the next run.
 From the repository root, copy the default:
 
 ```shell
-cp -n src/java_quickstart_generator/templates/course_prompt.md prompts/my_course_prompt.md
+cp -n src/quickstart_generator/templates/course_prompt.md prompts/my_course_prompt.md
 ```
 
 Edit the copy. For example, add “Use short paragraphs and concrete examples” beneath the
 initial and continuation headings. Then select it:
 
 ```shell
-uv run java-quickstart-generator SEC-01 \
-  --course-spec prompts/guide_spec.yaml \
+uv run quickstart-generator SEC-01 \
+  --course-spec prompts/example_course.yaml \
   --prompt-template prompts/my_course_prompt.md
 ```
 
-The local `prompts/guide_prompt_original.md` preserves the original Java/Veeva guidance and
-sits beside the local course YAML. Select that path with `--prompt-template` to use it. Both
-local files are ignored by Git and are absent from a fresh clone. Other custom templates are
-visible to Git unless you ignore them yourself.
+On this machine, `prompts/guide_prompt_original.md` preserves earlier course-specific guidance.
+Select that path with `--prompt-template` to use it. It is ignored by Git and absent from a fresh
+clone. Other custom templates are visible to Git unless you ignore them yourself.
 
 ### Reserved headings
 
@@ -197,7 +203,7 @@ uv run ruff check .
 uv run pyright
 uv run pytest
 uv run python -m compileall -q src tests
-uv run java-quickstart-generator --help
+uv run quickstart-generator --help
 uv build
 git diff --check
 ```
@@ -228,15 +234,16 @@ This proof of concept does not provide:
 - guide assembly, export, or publication;
 - automatic Git commits;
 - a plugin system, web interface, or generalized workflow engine;
-- finished Java Quickstart course content; or
+- finished course content; or
 - generative video production.
 
 ## Documentation
 
+- [Project repository](https://github.com/missaugustina/quickstart-generator)
 - [OpenAI Codex SDK](https://learn.chatgpt.com/docs/codex-sdk)
 - [`uv` documentation](https://docs.astral.sh/uv/)
 
-# Course section IDs
+## Course section IDs
 
 Section IDs must be unique even when letter case differs (for example, `SEC-01` and
 `sec-01`). Each ID becomes a draft directory name, and some filesystems treat

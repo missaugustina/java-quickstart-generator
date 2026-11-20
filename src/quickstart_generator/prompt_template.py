@@ -6,7 +6,7 @@ from importlib.resources import files
 from pathlib import Path
 from string import Template
 
-from java_quickstart_generator.course_spec import CourseSection, CourseSpec
+from quickstart_generator.course_spec import CourseSection, CourseSpec
 
 _HEADINGS = ("# Initial turn", "# Continuation turn", "# Current section")
 _SECTION_FIELDS = {
@@ -101,7 +101,7 @@ def load_prompt_template(path: Path | None = None) -> PromptTemplate:
         source = (
             path
             if path is not None
-            else files("java_quickstart_generator").joinpath("templates/course_prompt.md")
+            else files("quickstart_generator").joinpath("templates/course_prompt.md")
         )
         text = source.read_text(encoding="utf-8")
     except UnicodeError as error:

@@ -7,8 +7,8 @@ behavior without forcing the workflow to inherit from a large base class.
 from pathlib import Path
 from typing import Protocol
 
-from java_quickstart_generator.course_spec import CourseSection, CourseSpec
-from java_quickstart_generator.models import (
+from quickstart_generator.course_spec import CourseSection, CourseSpec
+from quickstart_generator.models import (
     AgentResponse,
     GeneratorConfig,
     ModulePart,

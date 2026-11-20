@@ -6,11 +6,11 @@ from typing import Any
 import pytest
 import yaml
 
-import java_quickstart_generator.__main__ as cli
-from java_quickstart_generator.adapters import GuidePromptBuilder, MarkdownWriter
-from java_quickstart_generator.course_spec import load_course_spec
-from java_quickstart_generator.models import AgentResponse, GeneratorConfig
-from java_quickstart_generator.workflow import generate_yaml_course
+import quickstart_generator.__main__ as cli
+from quickstart_generator.adapters import GuidePromptBuilder, MarkdownWriter
+from quickstart_generator.course_spec import load_course_spec
+from quickstart_generator.models import AgentResponse, GeneratorConfig
+from quickstart_generator.workflow import generate_yaml_course
 
 
 def sample_spec() -> dict[str, Any]:
@@ -52,6 +52,13 @@ def write_spec(tmp_path: Path, data: object) -> Path:
     path = tmp_path / "course.yaml"
     path.write_text(yaml.safe_dump(data), encoding="utf-8")
     return path
+
+
+def test_bundled_example_matches_cli_default() -> None:
+    path = cli.parse_args([]).config.guide_spec
+    spec = load_course_spec(path)
+    assert [section.id for section in spec.sections] == ["SEC-01", "SEC-02"]
+    assert spec.required_blocks
 
 
 def test_load_preserves_section_order_and_sorts_blocks(tmp_path: Path) -> None:
@@ -286,7 +293,7 @@ def test_yaml_course_rejects_blocked_directory_before_codex(tmp_path: Path, bloc
 
 def test_cli_custom_template_reaches_agent(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     path = write_spec(tmp_path, sample_spec())
-    bundled = Path(__file__).parents[1] / "src/java_quickstart_generator/templates/course_prompt.md"
+    bundled = Path(__file__).parents[1] / "src/quickstart_generator/templates/course_prompt.md"
     custom = tmp_path / "custom.md"
     custom.write_text(
         bundled.read_text().replace(
@@ -330,7 +337,7 @@ def test_cli_invalid_template_prevents_agent_creation(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, old: str, new: str
 ) -> None:
     path = write_spec(tmp_path, sample_spec())
-    bundled = Path(__file__).parents[1] / "src/java_quickstart_generator/templates/course_prompt.md"
+    bundled = Path(__file__).parents[1] / "src/quickstart_generator/templates/course_prompt.md"
     custom = tmp_path / "bad.md"
     custom.write_text(bundled.read_text().replace(old, new))
 

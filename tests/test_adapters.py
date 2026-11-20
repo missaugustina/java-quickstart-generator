@@ -5,13 +5,13 @@ from pathlib import Path
 import pytest
 from openai_codex import Sandbox
 
-import java_quickstart_generator.adapters as adapters
-from java_quickstart_generator.adapters import (
+import quickstart_generator.adapters as adapters
+from quickstart_generator.adapters import (
     CodexAgent,
     GenerationError,
     MarkdownWriter,
 )
-from java_quickstart_generator.models import (
+from quickstart_generator.models import (
     AgentResponse,
     GeneratorConfig,
     ModulePart,
