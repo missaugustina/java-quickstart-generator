@@ -72,7 +72,7 @@ class CodexAgent:
 
 
 class MarkdownWriter:
-    """Write one generated module part as Markdown."""
+    """Write one generated section as Markdown."""
 
     def write_artifact(
         self,

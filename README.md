@@ -1,6 +1,6 @@
-# Java Quickstart Generator
+# Quickstart Generator
 
-A small Python proof of concept for generating a modular Java refresher with the OpenAI Codex
+A small Python proof of concept for generating modular quickstart content with the OpenAI Codex
 SDK. It runs one or more ordered sections in a single Codex thread and saves each response as a
 separate Markdown draft for human review.
 
@@ -120,7 +120,7 @@ uv run quickstart-generator SEC-01 \
   --prompt-template prompts/my_course_prompt.md
 ```
 
-The local `prompts/guide_prompt_original.md` preserves the original Java/Veeva guidance and
+The local `prompts/guide_prompt_original.md` preserves earlier course-specific guidance and
 sits beside the local course YAML. Select that path with `--prompt-template` to use it. Both
 local files are ignored by Git and are absent from a fresh clone. Other custom templates are
 visible to Git unless you ignore them yourself.
@@ -229,7 +229,7 @@ This proof of concept does not provide:
 - guide assembly, export, or publication;
 - automatic Git commits;
 - a plugin system, web interface, or generalized workflow engine;
-- finished Java Quickstart course content; or
+- finished course content; or
 - generative video production.
 
 ## Documentation

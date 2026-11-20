@@ -95,7 +95,7 @@ def test_success_composes_adapters_and_reports_artifacts(
     assert isinstance(agent, CodexAgent)
     assert agent.model == secret_model
     assert isinstance(writer, MarkdownWriter)
-    assert "Generated 2 draft(s) for course modules SEC-01, SEC-02" in captured.out
+    assert "Generated 2 draft(s) for course sections SEC-01, SEC-02" in captured.out
     assert "drafts/SEC-01/01-map.md" in captured.out
     assert "drafts/SEC-02/01-concepts.md" in captured.out
     assert "Codex thread: course-thread" in captured.out
@@ -118,7 +118,7 @@ def test_expected_generation_failure_returns_nonzero_status(
     captured = capsys.readouterr()
     assert status == 1
     assert captured.out == ""
-    assert "Could not generate course modules SEC-404" in captured.err
+    assert "Could not generate course sections SEC-404" in captured.err
     assert "missing module prompts for SEC-404" in captured.err
 
 
@@ -136,7 +136,7 @@ def test_failed_codex_turn_returns_nonzero_status(
     captured = capsys.readouterr()
     assert status == 1
     assert captured.out == ""
-    assert "Could not generate course modules SEC-01" in captured.err
+    assert "Could not generate course sections SEC-01" in captured.err
     assert "Codex turn failed: service unavailable" in captured.err
 
 

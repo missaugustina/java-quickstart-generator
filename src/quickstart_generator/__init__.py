@@ -1,4 +1,4 @@
-"""Generate a Java quickstart guide one focused part at a time."""
+"""Generate quickstart content one section at a time."""
 
 from quickstart_generator.adapters import GenerationError
 from quickstart_generator.models import (

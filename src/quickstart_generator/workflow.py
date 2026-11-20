@@ -1,4 +1,4 @@
-"""Minimal orchestration for generating ordered guide modules."""
+"""Minimal orchestration for generating ordered course sections."""
 
 from collections.abc import Sequence
 from pathlib import Path
