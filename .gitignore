@@ -25,6 +25,10 @@ htmlcov/
 .env.*
 !.env.example
 
+# Local course specification includes a personal learner profile.
+prompts/guide_spec.yaml
+prompts/guide_prompt_original.md
+
 # Generated content
 output/*
 !output/.gitkeep
