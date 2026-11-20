@@ -239,6 +239,7 @@ This proof of concept does not provide:
 
 ## Documentation
 
+- [Project repository](https://github.com/missaugustina/quickstart-generator)
 - [OpenAI Codex SDK](https://learn.chatgpt.com/docs/codex-sdk)
 - [`uv` documentation](https://docs.astral.sh/uv/)
 
