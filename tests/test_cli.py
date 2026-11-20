@@ -5,14 +5,14 @@ from typing import cast
 
 import pytest
 
-import java_quickstart_generator.__main__ as cli
-from java_quickstart_generator.adapters import (
+import quickstart_generator.__main__ as cli
+from quickstart_generator.adapters import (
     CodexAgent,
     GenerationError,
     GuidePromptBuilder,
     MarkdownWriter,
 )
-from java_quickstart_generator.models import (
+from quickstart_generator.models import (
     AgentResponse,
     GenerationOutcome,
     GeneratorConfig,
@@ -34,7 +34,7 @@ def test_help_exits_successfully_without_running_generation(
 
     captured = capsys.readouterr()
     assert exit_info.value.code == 0
-    assert "usage: java-quickstart-generator" in captured.out
+    assert "usage: quickstart-generator" in captured.out
     assert "SEC_ID" in captured.out
     assert "--course-spec" in captured.out
     assert "--prompts-directory" not in captured.out

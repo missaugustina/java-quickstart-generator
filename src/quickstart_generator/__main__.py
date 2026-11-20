@@ -8,15 +8,15 @@ from typing import cast
 
 from openai_codex import CodexError
 
-from java_quickstart_generator.adapters import (
+from quickstart_generator.adapters import (
     CodexAgent,
     GenerationError,
     GuidePromptBuilder,
     MarkdownWriter,
 )
-from java_quickstart_generator.models import GeneratorConfig
-from java_quickstart_generator.prompt_template import load_prompt_template
-from java_quickstart_generator.workflow import generate_yaml_course
+from quickstart_generator.models import GeneratorConfig
+from quickstart_generator.prompt_template import load_prompt_template
+from quickstart_generator.workflow import generate_yaml_course
 
 DEFAULT_GUIDE_SPEC = Path("prompts/example_course.yaml")
 DEFAULT_DRAFTS_DIRECTORY = Path("drafts")
@@ -44,7 +44,7 @@ def build_parser() -> argparse.ArgumentParser:
     """Create the parser without reading arguments or running generation."""
 
     parser = argparse.ArgumentParser(
-        prog="java-quickstart-generator",
+        prog="quickstart-generator",
         description=(
             "Generate one or more Java Quickstart modules from a YAML course specification "
             "using one Codex thread for the complete course run."

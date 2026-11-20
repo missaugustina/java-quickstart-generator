@@ -5,8 +5,8 @@ from pathlib import Path
 
 import pytest
 
-from java_quickstart_generator.course_spec import CourseSection, CourseSpec, SectionBlock
-from java_quickstart_generator.prompt_template import PromptTemplate, load_prompt_template
+from quickstart_generator.course_spec import CourseSection, CourseSpec, SectionBlock
+from quickstart_generator.prompt_template import PromptTemplate, load_prompt_template
 
 
 def course() -> tuple[CourseSection, CourseSpec]:
@@ -30,7 +30,7 @@ def course() -> tuple[CourseSection, CourseSpec]:
 
 
 def test_load_and_render_bundled_template() -> None:
-    path = Path(__file__).parents[1] / "src/java_quickstart_generator/templates/course_prompt.md"
+    path = Path(__file__).parents[1] / "src/quickstart_generator/templates/course_prompt.md"
     template = load_prompt_template(path)
     section, spec = course()
     first = template.render(section, spec, None)
@@ -90,7 +90,7 @@ def test_loader_rejects_missing_headings(tmp_path: Path) -> None:
 def test_invalid_template_fails_during_loading(
     tmp_path: Path, old: str, new: str, message: str
 ) -> None:
-    bundled = Path(__file__).parents[1] / "src/java_quickstart_generator/templates/course_prompt.md"
+    bundled = Path(__file__).parents[1] / "src/quickstart_generator/templates/course_prompt.md"
     path = tmp_path / "custom.md"
     path.write_text(bundled.read_text().replace(old, new), encoding="utf-8")
     with pytest.raises(ValueError, match=message) as error:
@@ -112,7 +112,7 @@ def test_loader_rejects_unreadable_path(tmp_path: Path) -> None:
 
 
 def test_empty_continuation_rejected_before_render(tmp_path: Path) -> None:
-    bundled = Path(__file__).parents[1] / "src/java_quickstart_generator/templates/course_prompt.md"
+    bundled = Path(__file__).parents[1] / "src/quickstart_generator/templates/course_prompt.md"
     text = bundled.read_text()
     initial = text.split("# Continuation turn")[0]
     current = text.split("# Current section")[1]
@@ -123,7 +123,7 @@ def test_empty_continuation_rejected_before_render(tmp_path: Path) -> None:
 
 
 def test_braced_placeholders_and_escaped_dollars_are_valid(tmp_path: Path) -> None:
-    bundled = Path(__file__).parents[1] / "src/java_quickstart_generator/templates/course_prompt.md"
+    bundled = Path(__file__).parents[1] / "src/quickstart_generator/templates/course_prompt.md"
     path = tmp_path / "custom.md"
     path.write_text(bundled.read_text().replace("$topics", "${topics}") + "\nPrice: $$5\n")
     section, spec = course()

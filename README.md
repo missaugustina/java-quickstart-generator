@@ -43,13 +43,13 @@ dependencies with the system Python or system `pip`.
 Show the available arguments without running generation:
 
 ```shell
-uv run java-quickstart-generator --help
+uv run quickstart-generator --help
 ```
 
 The equivalent module command is:
 
 ```shell
-uv run python -m java_quickstart_generator --help
+uv run python -m quickstart_generator --help
 ```
 
 The following generation commands invoke the configured Codex service. They may require
@@ -58,13 +58,13 @@ authentication and may consume service resources.
 Generate every section in YAML list order:
 
 ```shell
-uv run java-quickstart-generator --course-spec prompts/example_course.yaml
+uv run quickstart-generator --course-spec prompts/example_course.yaml
 ```
 
 Generate selected sections in the order entered:
 
 ```shell
-uv run java-quickstart-generator SEC-01 SEC-02 --course-spec prompts/example_course.yaml
+uv run quickstart-generator SEC-01 SEC-02 --course-spec prompts/example_course.yaml
 ```
 
 Optional arguments:
@@ -100,7 +100,7 @@ instructions and how section data appears in each prompt. Edit a copy of the tem
 change those instructions without editing Python.
 
 The default is bundled at
-`src/java_quickstart_generator/templates/course_prompt.md`. It also ships inside the installed
+`src/quickstart_generator/templates/course_prompt.md`. It also ships inside the installed
 package and loads independently of the working directory. Custom template and course-spec paths
 are resolved from your working directory. The template is loaded and validated once per run;
 edits made during a run apply to the next run.
@@ -108,14 +108,14 @@ edits made during a run apply to the next run.
 From the repository root, copy the default:
 
 ```shell
-cp -n src/java_quickstart_generator/templates/course_prompt.md prompts/my_course_prompt.md
+cp -n src/quickstart_generator/templates/course_prompt.md prompts/my_course_prompt.md
 ```
 
 Edit the copy. For example, add “Use short paragraphs and concrete examples” beneath the
 initial and continuation headings. Then select it:
 
 ```shell
-uv run java-quickstart-generator SEC-01 \
+uv run quickstart-generator SEC-01 \
   --course-spec prompts/guide_spec.yaml \
   --prompt-template prompts/my_course_prompt.md
 ```
@@ -198,7 +198,7 @@ uv run ruff check .
 uv run pyright
 uv run pytest
 uv run python -m compileall -q src tests
-uv run java-quickstart-generator --help
+uv run quickstart-generator --help
 uv build
 git diff --check
 ```
