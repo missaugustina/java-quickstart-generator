@@ -235,3 +235,10 @@ This proof of concept does not provide:
 
 - [OpenAI Codex SDK](https://learn.chatgpt.com/docs/codex-sdk)
 - [`uv` documentation](https://docs.astral.sh/uv/)
+
+# Course section IDs
+
+Section IDs must be unique even when letter case differs (for example, `SEC-01` and
+`sec-01`). Each ID becomes a draft directory name, and some filesystems treat
+those names as the same directory. The YAML loader also rejects repeated keys
+and YAML merge keys (`<<`) so course instructions are unambiguous.

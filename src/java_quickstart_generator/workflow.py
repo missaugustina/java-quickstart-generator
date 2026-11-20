@@ -1,6 +1,7 @@
 """Minimal orchestration for generating ordered guide modules."""
 
 from collections.abc import Sequence
+from pathlib import Path
 
 from java_quickstart_generator.course_spec import load_course_spec
 from java_quickstart_generator.models import (
@@ -36,10 +37,23 @@ def generate_yaml_course(
     # Preflight the complete run before spending a Codex turn. The writer still
     # uses exclusive creation to protect against files created after this check.
     drafts_root = config.drafts_directory.resolve()
+    planned_targets: dict[Path, str] = {}
     for section in sections:
         target = config.drafts_directory / section.id / "01-section.md"
-        if not target.resolve().is_relative_to(drafts_root):
+        resolved_target = target.resolve()
+        if not resolved_target.is_relative_to(drafts_root):
             raise ValueError(f"Artifact path escapes drafts directory: {target}")
+        previous_section = planned_targets.get(resolved_target)
+        if previous_section is not None:
+            raise ValueError(
+                f"Sections {previous_section} and {section.id} share draft destination: {target}"
+            )
+        planned_targets[resolved_target] = section.id
+        for ancestor in target.parents:
+            if ancestor.is_symlink() and not ancestor.exists():
+                raise ValueError(f"Broken directory symlink blocks draft: {ancestor}")
+            if ancestor.exists() and not ancestor.is_dir():
+                raise ValueError(f"File blocks draft directory: {ancestor}")
         if target.exists() or target.is_symlink():
             raise FileExistsError(f"Draft already exists: {target}")
 

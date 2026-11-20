@@ -7,6 +7,31 @@ from typing import Any, cast
 import yaml
 
 
+class _UniqueKeyLoader(yaml.SafeLoader):
+    """Safe YAML loader that rejects ambiguous mapping keys."""
+
+    def construct_mapping(self, node: yaml.MappingNode, deep: bool = False) -> dict[Any, Any]:
+        seen: set[Any] = set()
+        for key_node, _ in node.value:
+            if key_node.tag == "tag:yaml.org,2002:merge":
+                raise yaml.constructor.ConstructorError(
+                    None, None, "YAML merge keys (<<) are not supported", key_node.start_mark
+                )
+            key = cast(str, self.construct_object(key_node, deep=deep))  # pyright: ignore[reportUnknownMemberType]
+            try:
+                duplicate = key in seen
+            except TypeError as error:
+                raise yaml.constructor.ConstructorError(
+                    None, None, "YAML mapping key is not hashable", key_node.start_mark
+                ) from error
+            if duplicate:
+                raise yaml.constructor.ConstructorError(
+                    None, None, f"Duplicate YAML key: {key}", key_node.start_mark
+                )
+            seen.add(key)
+        return super().construct_mapping(node, deep=deep)
+
+
 @dataclass(frozen=True, slots=True)
 class CourseSection:
     id: str
@@ -63,7 +88,7 @@ def load_course_spec(path: Path) -> CourseSpec:
     if not source_text.strip():
         raise ValueError(f"Course specification is empty: {path}")
     try:
-        root = _mapping(yaml.safe_load(source_text), str(path))
+        root = _mapping(yaml.load(source_text, Loader=_UniqueKeyLoader), str(path))
     except yaml.YAMLError as error:
         raise ValueError(f"Invalid YAML in {path}: {error}") from error
 
@@ -74,6 +99,7 @@ def load_course_spec(path: Path) -> CourseSpec:
 
     sections: list[CourseSection] = []
     seen_ids: set[str] = set()
+    seen_folded_ids: set[str] = set()
     for index, raw_section in enumerate(cast(list[Any], raw_sections)):
         section = _mapping(raw_section, f"guide_structure.sections[{index}]")
         section_id = _text(section.get("id"), f"section[{index}].id")
@@ -85,7 +111,10 @@ def load_course_spec(path: Path) -> CourseSpec:
             raise ValueError(f"section[{index}].id has unsafe characters: {section_id}")
         if section_id in seen_ids:
             raise ValueError(f"Duplicate section id: {section_id}")
+        if section_id.lower() in seen_folded_ids:
+            raise ValueError(f"Section IDs must be unique regardless of case: {section_id}")
         seen_ids.add(section_id)
+        seen_folded_ids.add(section_id.lower())
         where = f"section {section_id}"
         sections.append(
             CourseSection(

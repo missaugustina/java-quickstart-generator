@@ -94,6 +94,63 @@ def test_rejects_malformed_yaml(tmp_path: Path) -> None:
         load_course_spec(path)
 
 
+def test_rejects_case_only_section_ids(tmp_path: Path) -> None:
+    data = sample_spec()
+    data["guide_structure"]["sections"][1]["id"] = "sec-02"
+    config = GeneratorConfig(write_spec(tmp_path, data), tmp_path / "drafts")
+    agent = CourseAgent([])
+    with pytest.raises(ValueError, match="regardless of case"):
+        generate_yaml_course([], config, GuidePromptBuilder(), agent, MarkdownWriter())
+    assert not agent.calls
+    assert not config.drafts_directory.exists()
+
+
+@pytest.mark.parametrize(
+    "duplicate",
+    [
+        "purpose: First\n    purpose: Second",
+        "guide_structure: {}\nguide_structure: {sections: []}",
+        "name: First\n    name: Second",
+    ],
+)
+def test_rejects_duplicate_yaml_keys(tmp_path: Path, duplicate: str) -> None:
+    path = write_spec(tmp_path, sample_spec())
+    source = path.read_text()
+    if duplicate.startswith("purpose:"):
+        source = source.replace("purpose: Learn a concept", duplicate, 1)
+    elif duplicate.startswith("name:"):
+        source = source.replace("name: Practice", duplicate, 1)
+    else:
+        source += duplicate + "\n"
+    path.write_text(source)
+    agent = CourseAgent([])
+    config = GeneratorConfig(path, tmp_path / "drafts")
+    with pytest.raises(ValueError, match=r"(?s)Duplicate YAML key:.*line"):
+        generate_yaml_course([], config, GuidePromptBuilder(), agent, MarkdownWriter())
+    assert not agent.calls
+    assert not config.drafts_directory.exists()
+
+
+def test_rejects_yaml_merge_keys(tmp_path: Path) -> None:
+    path = write_spec(tmp_path, sample_spec())
+    path.write_text(path.read_text() + "merged: {<<: {name: test}}\n")
+    with pytest.raises(ValueError, match="merge keys"):
+        load_course_spec(path)
+
+
+def test_safe_yaml_alias_remains_valid(tmp_path: Path) -> None:
+    path = write_spec(tmp_path, sample_spec())
+    source = path.read_text().replace(
+        "purpose: Learn a concept", "purpose: &purpose Learn a concept"
+    )
+    source = source.replace("purpose: Learn another concept", "purpose: *purpose")
+    path.write_text(source)
+    assert [section.purpose for section in load_course_spec(path).sections] == [
+        "Learn a concept",
+        "Learn a concept",
+    ]
+
+
 def test_section_prompts_include_section_data_and_only_initial_full_spec(tmp_path: Path) -> None:
     data = sample_spec()
     data["private_course_context"] = "Full specification marker"
@@ -183,6 +240,48 @@ def test_yaml_course_preflights_later_draft_collision(tmp_path: Path) -> None:
         generate_yaml_course([], config, GuidePromptBuilder(), agent, MarkdownWriter())
     assert not agent.calls
     assert existing.read_text() == "keep"
+
+
+def test_yaml_course_rejects_aliased_destinations_before_codex(tmp_path: Path) -> None:
+    path = write_spec(tmp_path, sample_spec())
+    config = GeneratorConfig(path, tmp_path / "drafts")
+    (config.drafts_directory / "SEC-02").mkdir(parents=True)
+    try:
+        (config.drafts_directory / "SEC-01").symlink_to("SEC-02", target_is_directory=True)
+    except OSError:
+        pytest.skip("Directory symlinks are unavailable")
+    agent = CourseAgent([])
+    with pytest.raises(ValueError, match="share draft destination"):
+        generate_yaml_course([], config, GuidePromptBuilder(), agent, MarkdownWriter())
+    assert not agent.calls
+    assert not (config.drafts_directory / "SEC-02" / "01-section.md").exists()
+
+
+@pytest.mark.parametrize("blocker", ["section", "root", "above_root", "dangling_link"])
+def test_yaml_course_rejects_blocked_directory_before_codex(tmp_path: Path, blocker: str) -> None:
+    path = write_spec(tmp_path, sample_spec())
+    drafts = tmp_path / "parent" / "drafts"
+    config = GeneratorConfig(path, drafts)
+    if blocker == "section":
+        blocked = drafts / "SEC-01"
+    elif blocker == "root":
+        blocked = drafts
+    else:
+        blocked = drafts.parent
+    blocked.parent.mkdir(parents=True, exist_ok=True)
+    if blocker == "dangling_link":
+        try:
+            blocked.symlink_to("missing", target_is_directory=True)
+        except OSError:
+            pytest.skip("Symlinks are unavailable")
+    else:
+        blocked.write_text("keep")
+    agent = CourseAgent([])
+    with pytest.raises(ValueError, match="blocks draft"):
+        generate_yaml_course([], config, GuidePromptBuilder(), agent, MarkdownWriter())
+    assert not agent.calls
+    if blocker != "dangling_link":
+        assert blocked.read_text() == "keep"
 
 
 def test_cli_custom_template_reaches_agent(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
