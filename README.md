@@ -55,16 +55,22 @@ uv run python -m quickstart_generator --help
 The following generation commands invoke the configured Codex service. They may require
 authentication and may consume service resources.
 
-Generate every section in YAML list order:
+Generate the two sections in the bundled example, in YAML list order:
 
 ```shell
-uv run quickstart-generator --course-spec prompts/example_course.yaml
+uv run quickstart-generator
 ```
 
-Generate selected sections in the order entered:
+Generate selected example sections in the order entered:
 
 ```shell
-uv run quickstart-generator SEC-01 SEC-02 --course-spec prompts/example_course.yaml
+uv run quickstart-generator SEC-02 SEC-01
+```
+
+Generate from your own YAML specification:
+
+```shell
+uv run quickstart-generator --course-spec prompts/guide_spec.yaml
 ```
 
 Optional arguments:
@@ -84,14 +90,14 @@ safe `id`, `title`, `map_location`, `purpose`, `topics`, `assignment_connection`
 `instruction` for each block.
 
 The first turn receives the complete specification. Later turns receive the current section,
-shared section blocks, and continuity rules. Each draft is written to
+shared section blocks, and continuity rules in the same Codex thread. Each draft is written to
 `drafts/<SECTION_ID>/01-section.md`. Move an existing draft before generating that section again.
 
 The tracked `prompts/example_course.yaml` is a small, topic-neutral example available in a fresh
-clone. The local `prompts/guide_spec.yaml` contains a personal learner profile and is ignored by
-Git; select it explicitly with `--course-spec` to use it. Drafts remain visible to Git; review
-their contents before committing.
-`output/` remains reserved for future exports.
+clone. Copy it to another path and edit its sections to describe your own course. On this machine,
+`prompts/guide_spec.yaml` is an ignored personal specification; it is absent from a fresh clone.
+Select a personal file explicitly with `--course-spec`. Drafts remain visible to Git; review
+their contents before committing. `output/` remains reserved for future exports.
 
 ## Customize the prompt
 
@@ -116,14 +122,13 @@ initial and continuation headings. Then select it:
 
 ```shell
 uv run quickstart-generator SEC-01 \
-  --course-spec prompts/guide_spec.yaml \
+  --course-spec prompts/example_course.yaml \
   --prompt-template prompts/my_course_prompt.md
 ```
 
-The local `prompts/guide_prompt_original.md` preserves earlier course-specific guidance and
-sits beside the local course YAML. Select that path with `--prompt-template` to use it. Both
-local files are ignored by Git and are absent from a fresh clone. Other custom templates are
-visible to Git unless you ignore them yourself.
+On this machine, `prompts/guide_prompt_original.md` preserves earlier course-specific guidance.
+Select that path with `--prompt-template` to use it. It is ignored by Git and absent from a fresh
+clone. Other custom templates are visible to Git unless you ignore them yourself.
 
 ### Reserved headings
 
@@ -237,7 +242,7 @@ This proof of concept does not provide:
 - [OpenAI Codex SDK](https://learn.chatgpt.com/docs/codex-sdk)
 - [`uv` documentation](https://docs.astral.sh/uv/)
 
-# Course section IDs
+## Course section IDs
 
 Section IDs must be unique even when letter case differs (for example, `SEC-01` and
 `sec-01`). Each ID becomes a draft directory name, and some filesystems treat
