@@ -15,10 +15,10 @@ from java_quickstart_generator.adapters import (
     MarkdownWriter,
 )
 from java_quickstart_generator.models import GeneratorConfig
-from java_quickstart_generator.workflow import generate_course
+from java_quickstart_generator.prompt_template import load_prompt_template
+from java_quickstart_generator.workflow import generate_yaml_course
 
 DEFAULT_GUIDE_SPEC = Path("prompts/guide_spec.yaml")
-DEFAULT_PROMPTS_DIRECTORY = Path("prompts/modules")
 DEFAULT_DRAFTS_DIRECTORY = Path("drafts")
 
 
@@ -46,30 +46,30 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="java-quickstart-generator",
         description=(
-            "Generate one or more Java Quickstart modules from ordered Markdown prompts "
+            "Generate one or more Java Quickstart modules from a YAML course specification "
             "using one Codex thread for the complete course run."
         ),
     )
     parser.add_argument(
         "module_ids",
-        nargs="+",
+        nargs="*",
         type=non_empty_value,
-        metavar="MODULE_ID",
-        help="ordered module directory names under the prompts root, such as SEC-01 SEC-02",
+        metavar="SEC_ID",
+        help="section IDs in requested order; omit to generate all sections in YAML order",
     )
     parser.add_argument(
-        "--guide-spec",
+        "--course-spec",
         type=Path,
         default=DEFAULT_GUIDE_SPEC,
         metavar="PATH",
         help=f"guide specification path (default: {DEFAULT_GUIDE_SPEC})",
     )
     parser.add_argument(
-        "--prompts-directory",
+        "--prompt-template",
         type=Path,
-        default=DEFAULT_PROMPTS_DIRECTORY,
+        default=None,
         metavar="PATH",
-        help=f"root containing module prompt directories (default: {DEFAULT_PROMPTS_DIRECTORY})",
+        help="custom Markdown prompt template (default: bundled course template)",
     )
     parser.add_argument(
         "--drafts-directory",
@@ -93,8 +93,8 @@ def parse_args(argv: list[str] | None = None) -> CliArguments:
 
     namespace = build_parser().parse_args(argv)
     config = GeneratorConfig(
-        guide_spec=cast(Path, namespace.guide_spec),
-        prompts_directory=cast(Path, namespace.prompts_directory),
+        guide_spec=cast(Path, namespace.course_spec),
+        prompt_template=cast(Path | None, namespace.prompt_template),
         drafts_directory=cast(Path, namespace.drafts_directory),
     )
     return CliArguments(
@@ -107,12 +107,14 @@ def parse_args(argv: list[str] | None = None) -> CliArguments:
 def run_generation(arguments: CliArguments) -> int:
     """Compose concrete adapters and generate the requested course modules."""
 
-    module_label = ", ".join(arguments.module_ids)
+    module_label = ", ".join(arguments.module_ids) or "all sections"
     try:
-        outcomes = generate_course(
-            module_ids=arguments.module_ids,
+        outcomes = generate_yaml_course(
+            section_ids=arguments.module_ids,
             config=arguments.config,
-            prompt_builder=GuidePromptBuilder(),
+            prompt_builder=GuidePromptBuilder(
+                load_prompt_template(arguments.config.prompt_template)
+            ),
             agent=CodexAgent(model=arguments.model),
             writer=MarkdownWriter(),
         )

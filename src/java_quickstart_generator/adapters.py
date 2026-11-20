@@ -4,12 +4,13 @@ from pathlib import Path
 
 from openai_codex import Codex, Sandbox
 
+from java_quickstart_generator.course_spec import CourseSection, CourseSpec
 from java_quickstart_generator.models import (
     AgentResponse,
-    GenerationRequest,
     GeneratorConfig,
     ModulePart,
 )
+from java_quickstart_generator.prompt_template import PromptTemplate, load_prompt_template
 
 
 class GenerationError(RuntimeError):
@@ -17,67 +18,15 @@ class GenerationError(RuntimeError):
 
 
 class GuidePromptBuilder:
-    """Build prompts from the guide specification and the current request."""
+    """Render section prompts using a loaded Markdown template."""
 
-    def build_prompt(
-        self,
-        request: GenerationRequest,
-        config: GeneratorConfig,
+    def __init__(self, template: PromptTemplate | None = None) -> None:
+        self.template = template if template is not None else load_prompt_template()
+
+    def build_section_prompt(
+        self, section: CourseSection, spec: CourseSpec, thread_id: str | None
     ) -> str:
-        instruction = request.instruction.strip()
-        if not instruction:
-            raise ValueError("Part instruction must not be empty.")
-
-        part_prompt = f"""## Current module part
-
-Module ID: {request.part.module_id}
-Part title: {request.part.title}
-Prompt file: {request.part.prompt_path.name}
-
-## Part instruction
-
-{instruction}
-
-## Output boundary
-
-- Return only the requested part as polished Markdown.
-- Do not generate, summarize, or revise other guide parts.
-- Do not include analysis, a preface, or a code fence around the entire response.
-- Maintain terminology and structural continuity with the guide context.
-"""
-
-        if request.thread_id is not None:
-            return f"""# Continuation contract
-
-Continue the same Java Quickstart guide using the context already established in this thread.
-
-- Preserve established territory-map IDs and approved terminology.
-- Keep standard Java concepts distinct from Veeva-specific behavior.
-- Give every visual a one-to-one text-based logical equivalent.
-- Maintain continuity with previously generated parts.
-- Generate only the requested part.
-
-{part_prompt}"""
-
-        if not config.guide_spec.exists():
-            raise FileNotFoundError(f"Guide specification not found: {config.guide_spec}")
-        if not config.guide_spec.is_file():
-            raise ValueError(f"Guide specification is not a file: {config.guide_spec}")
-
-        guide_spec = config.guide_spec.read_text(encoding="utf-8").strip()
-        if not guide_spec:
-            raise ValueError(f"Guide specification is empty: {config.guide_spec}")
-
-        return f"""# Initial generation contract
-
-Create one bounded part of the Java Quickstart guide. Treat the complete guide specification
-below as the authoritative source for audience, structure, terminology, and design constraints.
-
-## Complete guide specification
-
-{guide_spec}
-
-{part_prompt}"""
+        return self.template.render(section, spec, thread_id)
 
 
 class CodexAgent:
@@ -136,9 +85,16 @@ class MarkdownWriter:
         if not part.module_id.strip():
             raise ValueError("Module ID must not be empty.")
 
-        artifact_name = part.prompt_path.name
-        if not artifact_name or artifact_name in {".", ".."}:
-            raise ValueError(f"Prompt path has no valid filename: {part.prompt_path}")
+        artifact_name = part.output_filename
+        if (
+            not artifact_name.strip()
+            or artifact_name in {".", ".."}
+            or "/" in artifact_name
+            or "\\" in artifact_name
+            or "\x00" in artifact_name
+            or Path(artifact_name).suffix != ".md"
+        ):
+            raise ValueError(f"Invalid output filename: {artifact_name!r}")
 
         artifact_path = config.drafts_directory / part.module_id / artifact_name
         drafts_root = config.drafts_directory.resolve()

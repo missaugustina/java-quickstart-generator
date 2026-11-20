@@ -9,8 +9,8 @@ class GeneratorConfig:
     """Project paths shared by one generation run."""
 
     guide_spec: Path
-    prompts_directory: Path
     drafts_directory: Path
+    prompt_template: Path | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -20,15 +20,7 @@ class ModulePart:
     module_id: str
     prompt_path: Path
     title: str
-
-
-@dataclass(frozen=True, slots=True)
-class GenerationRequest:
-    """Input needed to generate one part in an existing or new agent thread."""
-
-    part: ModulePart
-    instruction: str
-    thread_id: str | None = None
+    output_filename: str = "01-section.md"
 
 
 @dataclass(frozen=True, slots=True)

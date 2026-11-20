@@ -4,20 +4,16 @@ from java_quickstart_generator.adapters import GenerationError
 from java_quickstart_generator.models import (
     AgentResponse,
     GenerationOutcome,
-    GenerationRequest,
     GeneratorConfig,
     ModulePart,
 )
-from java_quickstart_generator.workflow import generate_course, generate_module, generate_part
+from java_quickstart_generator.workflow import generate_yaml_course
 
 __all__ = [
     "AgentResponse",
     "GenerationOutcome",
     "GenerationError",
-    "GenerationRequest",
     "GeneratorConfig",
     "ModulePart",
-    "generate_course",
-    "generate_module",
-    "generate_part",
+    "generate_yaml_course",
 ]

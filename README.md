@@ -1,7 +1,7 @@
 # Java Quickstart Generator
 
 A small Python proof of concept for generating a modular Java refresher with the OpenAI Codex
-SDK. It runs one or more ordered modules in a single Codex thread and saves each response as a
+SDK. It runs one or more ordered sections in a single Codex thread and saves each response as a
 separate Markdown draft for human review.
 
 The generator is intentionally narrow. It demonstrates prompt chaining, replaceable behavioral
@@ -9,41 +9,13 @@ roles, and safe draft writing without becoming a generalized course-authoring pl
 
 ## How it works
 
-```text
-guide specification + ordered course modules + ordered part prompts
-                              |
-                              v
-                      GuidePromptBuilder
-                              |
-                              v
-          one Codex thread across every module and part
-                              |
-                              v
-                       MarkdownWriter
-                              |
-                              v
-                    tracked Markdown drafts
-```
+The generator safely parses a YAML course specification and validates its sections and shared
+section template. It generates one Markdown draft per section, with one Codex turn per section.
+All turns in a run use the same Codex thread ID; context compaction is acceptable. Separate CLI
+invocations start separate threads.
 
-For one course-generation run, the application:
-
-1. Processes the module IDs in the order supplied on the command line.
-2. Finds regular Markdown files in each `prompts/modules/<MODULE_ID>/` directory.
-3. Sorts each module's parts by filename, such as `01-orientation.md` before
-   `02-concepts.md`.
-4. Includes the complete guide specification in the first course prompt only.
-5. Starts one Codex thread with a read-only sandbox.
-6. Resumes that exact thread for every later part, including parts in later modules.
-7. Writes one draft per successful prompt under `drafts/<MODULE_ID>/`.
-8. Stops on the first failure while leaving earlier successful drafts available.
-
-Codex may compact its internal context during a long course run. Compaction is acceptable: every
-generation call must still use the same Codex thread ID. This PoC does not persist that thread ID
-between separate CLI invocations.
-
-The guide specification is read as UTF-8 text and included in the first prompt. Its `.yaml`
-extension makes the example easy for a human to structure; this PoC does not parse or validate
-the YAML schema.
+Before calling Codex, it checks requested IDs and all planned drafts for collisions. It stops on
+the first generation failure and retains completed drafts. Existing drafts are never overwritten.
 
 ## Requirements and setup
 
@@ -83,72 +55,118 @@ uv run python -m java_quickstart_generator --help
 The following generation commands invoke the configured Codex service. They may require
 authentication and may consume service resources.
 
-Generate the included `SEC-XX` example as a one-module course run using the default paths and the
-user's configured Codex model:
+Generate every section in YAML list order:
 
 ```shell
-uv run java-quickstart-generator SEC-XX
+uv run java-quickstart-generator --course-spec prompts/guide_spec.yaml
 ```
 
-To generate a multi-module course, supply its existing module directory names in the desired
-course order. For example, a course containing `SEC-01` and `SEC-02` would use the positional form
-`MODULE_ID [MODULE_ID ...]` with `SEC-01` followed by `SEC-02`.
-
-Override every configurable input:
+Generate selected sections in the order entered:
 
 ```shell
-uv run java-quickstart-generator SEC-XX \
-  --guide-spec prompts/guide_spec.yaml \
-  --prompts-directory prompts/modules \
-  --drafts-directory drafts \
-  --model MODEL_NAME
+uv run java-quickstart-generator SEC-01 SEC-02 --course-spec prompts/guide_spec.yaml
 ```
 
-Defaults:
+Optional arguments:
 
-| Input | Default | Meaning |
+| Argument | Default | Meaning |
 |---|---|---|
-| `MODULE_ID [MODULE_ID ...]` | Required | One or more existing module directories, in course order |
-| `--guide-spec` | `prompts/guide_spec.yaml` | Shared guide context |
-| `--prompts-directory` | `prompts/modules` | Root containing module directories |
-| `--drafts-directory` | `drafts` | Root for reviewable part drafts |
-| `--model` | Codex configured default | Optional model override for the course thread |
+| `SEC_ID ...` | All sections | Select sections in requested order |
+| `--course-spec PATH` | `prompts/guide_spec.yaml` | YAML course source |
+| `--prompt-template PATH` | Bundled Markdown template | Custom prompt wording and arrangement |
+| `--drafts-directory PATH` | `drafts` | Destination for drafts |
+| `--model MODEL` | Configured Codex default | Model override |
 
-The command reports generated artifact paths and the shared course thread ID. It does not print
-the full guide specification, part prompts, or model value.
+The YAML must contain a nonempty `guide_structure.sections` list. Each section requires a unique
+safe `id`, `title`, `map_location`, `purpose`, `topics`, `assignment_connection`, `activity`, and
+`layout`. Topics and layout are nonempty lists of text. The shared
+`section_template.required_blocks` list requires a positive unique `order`, `name`, and
+`instruction` for each block.
 
-## Directory contract
+The first turn receives the complete specification. Later turns receive the current section,
+shared section blocks, and continuity rules. Each draft is written to
+`drafts/<SECTION_ID>/01-section.md`. Move an existing draft before generating that section again.
 
-```text
-java-quickstart-generator/
-|-- prompts/
-|   |-- guide_spec.yaml
-|   `-- modules/
-|       `-- SEC-XX/
-|           `-- 01-example.md
-|-- drafts/
-|   `-- <MODULE_ID>/
-|       `-- <ordered-part>.md
-|-- output/
-|-- src/java_quickstart_generator/
-|   |-- __main__.py
-|   |-- adapters.py
-|   |-- models.py
-|   |-- roles.py
-|   `-- workflow.py
-|-- tests/
-|-- pyproject.toml
-`-- uv.lock
+The local `prompts/guide_spec.yaml` contains a personal learner profile and is ignored by Git.
+Supply your own specification when using a fresh clone. The old Markdown prompt directories are
+not used by the CLI. Drafts remain visible to Git; review their contents before committing.
+`output/` remains reserved for future exports.
+
+## Customize the prompt
+
+The YAML specification describes the course. A Markdown template controls the generation
+instructions and how section data appears in each prompt. Edit a copy of the template to
+change those instructions without editing Python.
+
+The default is bundled at
+`src/java_quickstart_generator/templates/course_prompt.md`. It also ships inside the installed
+package and loads independently of the working directory. Custom template and course-spec paths
+are resolved from your working directory. The template is loaded and validated once per run;
+edits made during a run apply to the next run.
+
+From the repository root, copy the default:
+
+```shell
+cp -n src/java_quickstart_generator/templates/course_prompt.md prompts/my_course_prompt.md
 ```
 
-- `prompts/` contains source specifications and ordered generation instructions.
-- `drafts/` contains working drafts. These files are visible to Git so they can be reviewed and
-  compared. Do not place sensitive generated content here unless it is appropriate to commit.
-- `output/` is reserved for later assembled or exported artifacts and is ignored by Git.
-- Existing drafts are never silently overwritten. Move or rename an existing draft before
-  intentionally generating the same part again.
+Edit the copy. For example, add “Use short paragraphs and concrete examples” beneath the
+initial and continuation headings. Then select it:
 
-The included `SEC-XX` module is a structural example, not completed Java course content.
+```shell
+uv run java-quickstart-generator SEC-01 \
+  --course-spec prompts/guide_spec.yaml \
+  --prompt-template prompts/my_course_prompt.md
+```
+
+The local `prompts/guide_prompt_original.md` preserves the original Java/Veeva guidance and
+sits beside the local course YAML. Select that path with `--prompt-template` to use it. Both
+local files are ignored by Git and are absent from a fresh clone. Other custom templates are
+visible to Git unless you ignore them yourself.
+
+### Reserved headings
+
+Keep these three exact top-level headings, each once, in this order. Start the file with the
+first heading; leading blank lines are allowed. Use lower-level headings inside the blocks.
+
+| Heading | Used when | Content |
+|---|---|---|
+| `# Initial turn` | First section in a run | Initial instructions and complete course context |
+| `# Continuation turn` | Every later section | Continuity instructions |
+| `# Current section` | Every turn | Current section data and output requirements |
+
+The renderer chooses one turn block and appends the current-section block once. The complete
+YAML context naturally also contains the selected section's source data.
+
+### Placeholder contract
+
+Use `$name` or `${name}`. The initial block must contain `$course_spec` exactly once. The
+continuation block must contain no placeholders. The current-section block must contain each
+remaining placeholder below exactly once. Keep placeholders in their assigned blocks.
+
+| Placeholder | Supplied value |
+|---|---|
+| `$course_spec` | Complete course YAML, with outer whitespace trimmed |
+| `$section_id` | Current section ID |
+| `$section_title` | Section title |
+| `$source_filename` | YAML filename without its directory |
+| `$map_location` | Section location in the course map |
+| `$purpose` | Section purpose |
+| `$topics` | Topic list formatted as Markdown bullets |
+| `$assignment_connection` | Connection to the assignment |
+| `$activity` | Practice activity |
+| `$layout` | Layout requirements formatted as Markdown bullets |
+| `$required_blocks` | Shared section blocks sorted by their order values |
+
+Write `$$` for a literal dollar sign in template prose: `$$5` renders as `$5`. Inserted YAML
+values are substituted once and remain literal, so dollar signs and placeholder-looking text
+inside course data do not need escaping. Templates support substitution only, with no loops,
+conditions, expressions, or code execution.
+
+All three blocks are validated before the CLI creates a Codex agent, even when only one section
+is selected. Missing files, invalid UTF-8, empty blocks, missing or repeated headings, malformed
+placeholders, and unknown, missing, repeated, or misplaced placeholders stop the run with an
+error. The command does not fall back to the default when a custom template is invalid.
 
 ## Architecture
 
@@ -156,10 +174,13 @@ The design uses small structural roles rather than a deep class hierarchy:
 
 | Layer | Responsibility |
 |---|---|
+| `course_spec.py` | YAML parsing and structural validation |
 | `models.py` | Immutable data passed through the application |
 | `roles.py` | Narrow `Protocol` contracts for prompt building, agent execution, and writing |
-| `adapters.py` | Guide prompt formatting, Codex SDK access, and safe Markdown writing |
-| `workflow.py` | Single-part orchestration plus ordered module and course chaining |
+| `prompt_template.py` | Markdown template loading, validation, and literal substitution |
+| `templates/course_prompt.md` | Editable default generation guidance |
+| `adapters.py` | Template-backed prompt builder, Codex SDK access, and safe Markdown writing |
+| `workflow.py` | YAML section selection, draft preflight, and sequential course generation |
 | `__main__.py` | Argument parsing, dependency composition, reporting, and exit status |
 
 The workflow depends on protocols rather than concrete adapters. Tests can therefore use small
@@ -177,6 +198,7 @@ uv run pyright
 uv run pytest
 uv run python -m compileall -q src tests
 uv run java-quickstart-generator --help
+uv build
 git diff --check
 ```
 
@@ -184,6 +206,10 @@ git diff --check
 
 The workflow, adapters, filesystem protections, and CLI are covered by offline automated tests.
 The Codex adapter tests use a fake SDK boundary and do not require credentials or network access.
+Template tests cover customization through the CLI, literal substitution, and validation before
+agent creation. A packaging test builds and installs a wheel in a temporary directory, then
+loads and renders the bundled template outside the repository. Its build and installation use
+`--offline`; run `uv sync --locked` first to populate the required build dependencies.
 
 A live end-to-end Codex generation has **not** been run as part of the automated suite. Live model
 behavior, authentication, runtime availability, cost, and response quality remain to be validated
@@ -209,3 +235,10 @@ This proof of concept does not provide:
 
 - [OpenAI Codex SDK](https://learn.chatgpt.com/docs/codex-sdk)
 - [`uv` documentation](https://docs.astral.sh/uv/)
+
+# Course section IDs
+
+Section IDs must be unique even when letter case differs (for example, `SEC-01` and
+`sec-01`). Each ID becomes a draft directory name, and some filesystems treat
+those names as the same directory. The YAML loader also rejects repeated keys
+and YAML merge keys (`<<`) so course instructions are unambiguous.

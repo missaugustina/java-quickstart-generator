@@ -27,7 +27,7 @@ def test_help_exits_successfully_without_running_generation(
     def unexpected_generation(**kwargs: object) -> list[GenerationOutcome]:
         raise AssertionError(f"Generation must not run for --help: {kwargs}")
 
-    monkeypatch.setattr(cli, "generate_course", unexpected_generation)
+    monkeypatch.setattr(cli, "generate_yaml_course", unexpected_generation)
 
     with pytest.raises(SystemExit) as exit_info:
         cli.main(["--help"])
@@ -35,24 +35,18 @@ def test_help_exits_successfully_without_running_generation(
     captured = capsys.readouterr()
     assert exit_info.value.code == 0
     assert "usage: java-quickstart-generator" in captured.out
-    assert "MODULE_ID" in captured.out
-    assert "--guide-spec" in captured.out
-    assert "--prompts-directory" in captured.out
+    assert "SEC_ID" in captured.out
+    assert "--course-spec" in captured.out
+    assert "--prompts-directory" not in captured.out
     assert "--drafts-directory" in captured.out
     assert "--model" in captured.out
     assert captured.err == ""
 
 
-def test_missing_module_id_uses_standard_argument_error(
-    capsys: pytest.CaptureFixture[str],
-) -> None:
-    with pytest.raises(SystemExit) as exit_info:
-        cli.main([])
-
-    captured = capsys.readouterr()
-    assert exit_info.value.code == 2
-    assert "the following arguments are required: MODULE_ID" in captured.err
-    assert captured.out == ""
+def test_no_section_ids_selects_all() -> None:
+    arguments = cli.parse_args([])
+    assert arguments.module_ids == ()
+    assert arguments.config.guide_spec == Path("prompts/guide_spec.yaml")
 
 
 def test_success_composes_adapters_and_reports_artifacts(
@@ -72,16 +66,14 @@ def test_success_composes_adapters_and_reports_artifacts(
         received.update(kwargs)
         return outcomes
 
-    monkeypatch.setattr(cli, "generate_course", fake_generate_course)
+    monkeypatch.setattr(cli, "generate_yaml_course", fake_generate_course)
     secret_model = "MODEL_VALUE_MUST_NOT_BE_PRINTED"
 
     status = cli.main(
         [
             *module_ids,
-            "--guide-spec",
+            "--course-spec",
             "custom/guide.yaml",
-            "--prompts-directory",
-            "custom/prompts",
             "--drafts-directory",
             "custom/drafts",
             "--model",
@@ -95,10 +87,9 @@ def test_success_composes_adapters_and_reports_artifacts(
     agent = received["agent"]
     writer = received["writer"]
     assert status == 0
-    assert received["module_ids"] == module_ids
+    assert received["section_ids"] == module_ids
     assert isinstance(config, GeneratorConfig)
     assert config.guide_spec == Path("custom/guide.yaml")
-    assert config.prompts_directory == Path("custom/prompts")
     assert config.drafts_directory == Path("custom/drafts")
     assert isinstance(prompt_builder, GuidePromptBuilder)
     assert isinstance(agent, CodexAgent)
@@ -117,10 +108,10 @@ def test_expected_generation_failure_returns_nonzero_status(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     def fail_generation(**kwargs: object) -> list[GenerationOutcome]:
-        module_ids = ", ".join(cast(tuple[str, ...], kwargs["module_ids"]))
+        module_ids = ", ".join(cast(tuple[str, ...], kwargs["section_ids"]))
         raise FileNotFoundError(f"missing module prompts for {module_ids}")
 
-    monkeypatch.setattr(cli, "generate_course", fail_generation)
+    monkeypatch.setattr(cli, "generate_yaml_course", fail_generation)
 
     status = cli.main(["SEC-404"])
 
@@ -138,7 +129,7 @@ def test_failed_codex_turn_returns_nonzero_status(
     def fail_generation(**kwargs: object) -> list[GenerationOutcome]:
         raise GenerationError("Codex turn failed: service unavailable")
 
-    monkeypatch.setattr(cli, "generate_course", fail_generation)
+    monkeypatch.setattr(cli, "generate_yaml_course", fail_generation)
 
     status = cli.main(["SEC-01"])
 
@@ -157,12 +148,27 @@ def test_full_prompt_and_sensitive_values_are_not_printed(
     guide_secret = "FULL_GUIDE_SECRET_MUST_NOT_BE_PRINTED"
     instruction_secret = "PART_INSTRUCTION_SECRET_MUST_NOT_BE_PRINTED"
     model_secret = "MODEL_SECRET_MUST_NOT_BE_PRINTED"
-    guide_spec = tmp_path / "guide-spec.md"
-    guide_spec.write_text(guide_secret, encoding="utf-8")
-    prompts_directory = tmp_path / "prompts"
-    module_directory = prompts_directory / "SEC-01"
-    module_directory.mkdir(parents=True)
-    (module_directory / "01-part.md").write_text(instruction_secret, encoding="utf-8")
+    guide_spec = tmp_path / "course.yaml"
+    guide_spec.write_text(
+        f"""context: {guide_secret}
+guide_structure:
+  sections:
+    - id: SEC-01
+      title: Example
+      map_location: MAP-1
+      purpose: {instruction_secret}
+      topics: [Types]
+      assignment_connection: Apply it
+      activity: Trace it
+      layout: [Example]
+section_template:
+  required_blocks:
+    - order: 1
+      name: Location
+      instruction: Find it
+""",
+        encoding="utf-8",
+    )
     drafts_directory = tmp_path / "drafts"
 
     class CapturingAgent:
@@ -184,10 +190,8 @@ def test_full_prompt_and_sensitive_values_are_not_printed(
     status = cli.main(
         [
             "SEC-01",
-            "--guide-spec",
+            "--course-spec",
             str(guide_spec),
-            "--prompts-directory",
-            str(prompts_directory),
             "--drafts-directory",
             str(drafts_directory),
             "--model",
@@ -204,7 +208,7 @@ def test_full_prompt_and_sensitive_values_are_not_printed(
     assert guide_secret not in combined_output
     assert instruction_secret not in combined_output
     assert model_secret not in combined_output
-    assert (drafts_directory / "SEC-01" / "01-part.md").read_text(
+    assert (drafts_directory / "SEC-01" / "01-section.md").read_text(
         encoding="utf-8"
     ) == "generated draft"
 
@@ -213,10 +217,10 @@ def test_unexpected_programming_error_remains_visible(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     def fail_unexpectedly(**kwargs: object) -> list[GenerationOutcome]:
-        module_ids = ", ".join(cast(tuple[str, ...], kwargs["module_ids"]))
+        module_ids = ", ".join(cast(tuple[str, ...], kwargs["section_ids"]))
         raise RuntimeError(f"programming failure for {module_ids}")
 
-    monkeypatch.setattr(cli, "generate_course", fail_unexpectedly)
+    monkeypatch.setattr(cli, "generate_yaml_course", fail_unexpectedly)
 
     with pytest.raises(RuntimeError, match="programming failure for SEC-01"):
         cli.main(["SEC-01"])

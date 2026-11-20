@@ -9,29 +9,13 @@ import java_quickstart_generator.adapters as adapters
 from java_quickstart_generator.adapters import (
     CodexAgent,
     GenerationError,
-    GuidePromptBuilder,
     MarkdownWriter,
 )
 from java_quickstart_generator.models import (
     AgentResponse,
-    GenerationRequest,
     GeneratorConfig,
     ModulePart,
 )
-
-
-def make_request(tmp_path: Path, thread_id: str | None = None) -> GenerationRequest:
-    """Create a request whose prompt path deliberately does not exist."""
-
-    return GenerationRequest(
-        part=ModulePart(
-            module_id="SEC-01",
-            prompt_path=tmp_path / "missing-prompts" / "01-orientation.md",
-            title="Orientation",
-        ),
-        instruction="UNIQUE_CURRENT_INSTRUCTION",
-        thread_id=thread_id,
-    )
 
 
 def make_config(tmp_path: Path, guide_spec: Path) -> GeneratorConfig:
@@ -39,7 +23,6 @@ def make_config(tmp_path: Path, guide_spec: Path) -> GeneratorConfig:
 
     return GeneratorConfig(
         guide_spec=guide_spec,
-        prompts_directory=tmp_path / "prompts" / "modules",
         drafts_directory=tmp_path / "drafts",
     )
 
@@ -109,64 +92,6 @@ def install_fake_codex(
     return fake_codex
 
 
-def test_initial_prompt_includes_full_context_without_reading_part_path(tmp_path: Path) -> None:
-    guide_spec = tmp_path / "guide-spec.md"
-    guide_spec.write_text("GUIDE_SPEC_UNIQUE_MARKER", encoding="utf-8")
-    request = make_request(tmp_path)
-
-    prompt = GuidePromptBuilder().build_prompt(request, make_config(tmp_path, guide_spec))
-
-    assert "# Initial generation contract" in prompt
-    assert "## Complete guide specification" in prompt
-    assert "GUIDE_SPEC_UNIQUE_MARKER" in prompt
-    assert "## Current module part" in prompt
-    assert "Module ID: SEC-01" in prompt
-    assert "Part title: Orientation" in prompt
-    assert "Prompt file: 01-orientation.md" in prompt
-    assert "## Part instruction" in prompt
-    assert "## Output boundary" in prompt
-    assert prompt.count(request.instruction) == 1
-
-
-def test_continuation_prompt_uses_capsule_without_repeating_guide_spec(tmp_path: Path) -> None:
-    guide_spec = tmp_path / "guide-spec.md"
-    guide_spec.write_text("GUIDE_SPEC_MUST_NOT_BE_REPEATED", encoding="utf-8")
-    request = make_request(tmp_path, thread_id="existing-thread")
-
-    prompt = GuidePromptBuilder().build_prompt(request, make_config(tmp_path, guide_spec))
-
-    assert "# Continuation contract" in prompt
-    assert "context already established in this thread" in prompt
-    assert "Preserve established territory-map IDs" in prompt
-    assert "Maintain continuity with previously generated parts" in prompt
-    assert "## Current module part" in prompt
-    assert "## Output boundary" in prompt
-    assert "## Complete guide specification" not in prompt
-    assert "GUIDE_SPEC_MUST_NOT_BE_REPEATED" not in prompt
-    assert prompt.count(request.instruction) == 1
-
-
-def test_initial_prompt_rejects_missing_guide_specification(tmp_path: Path) -> None:
-    missing_guide_spec = tmp_path / "missing-guide-spec.md"
-
-    with pytest.raises(FileNotFoundError, match="Guide specification not found"):
-        GuidePromptBuilder().build_prompt(
-            make_request(tmp_path),
-            make_config(tmp_path, missing_guide_spec),
-        )
-
-
-def test_initial_prompt_rejects_empty_guide_specification(tmp_path: Path) -> None:
-    empty_guide_spec = tmp_path / "guide-spec.md"
-    empty_guide_spec.write_text("  \n\t", encoding="utf-8")
-
-    with pytest.raises(ValueError, match="Guide specification is empty"):
-        GuidePromptBuilder().build_prompt(
-            make_request(tmp_path),
-            make_config(tmp_path, empty_guide_spec),
-        )
-
-
 def test_writer_creates_utf8_draft_and_parent_directories(tmp_path: Path) -> None:
     config = make_config(tmp_path, tmp_path / "unused-guide.md")
     part = ModulePart(
@@ -178,7 +103,7 @@ def test_writer_creates_utf8_draft_and_parent_directories(tmp_path: Path) -> Non
 
     artifact_path = MarkdownWriter().write_artifact(part, response, config)
 
-    expected_path = config.drafts_directory / "SEC-01" / "01-orientation.md"
+    expected_path = config.drafts_directory / "SEC-01" / "01-section.md"
     assert artifact_path == expected_path
     assert artifact_path.read_text(encoding="utf-8") == response.content
     assert artifact_path.resolve().is_relative_to(config.drafts_directory.resolve())
@@ -236,12 +161,13 @@ def test_writer_rejects_module_id_path_traversal(tmp_path: Path) -> None:
     assert not (tmp_path / "absolute-outside" / "escape.md").exists()
 
 
-def test_writer_uses_prompt_filename_and_ignores_title_for_output_path(tmp_path: Path) -> None:
+def test_writer_uses_explicit_filename_and_ignores_source_and_title(tmp_path: Path) -> None:
     config = make_config(tmp_path, tmp_path / "unused-guide.md")
     part = ModulePart(
         module_id="SEC-01",
         prompt_path=Path("../../01-safe.md"),
         title="../../outside",
+        output_filename="02-custom.md",
     )
 
     artifact_path = MarkdownWriter().write_artifact(
@@ -250,20 +176,23 @@ def test_writer_uses_prompt_filename_and_ignores_title_for_output_path(tmp_path:
         config,
     )
 
-    assert artifact_path == config.drafts_directory / "SEC-01" / "01-safe.md"
+    assert artifact_path == config.drafts_directory / "SEC-01" / "02-custom.md"
     assert artifact_path.resolve().is_relative_to(config.drafts_directory.resolve())
     assert not (tmp_path / "outside").exists()
 
 
-@pytest.mark.parametrize("invalid_prompt_path", [Path("."), Path("..")])
-def test_writer_rejects_prompt_path_without_valid_filename(
+@pytest.mark.parametrize(
+    "invalid_filename",
+    ["", ".", "..", "../escape.md", "/tmp/a.md", "a/b.md", "a\\b.md", "file.yaml"],
+)
+def test_writer_rejects_invalid_output_filename(
     tmp_path: Path,
-    invalid_prompt_path: Path,
+    invalid_filename: str,
 ) -> None:
     config = make_config(tmp_path, tmp_path / "unused-guide.md")
-    part = ModulePart("SEC-01", invalid_prompt_path, "Invalid")
+    part = ModulePart("SEC-01", Path("course.yaml"), "Invalid", invalid_filename)
 
-    with pytest.raises(ValueError, match="no valid filename"):
+    with pytest.raises(ValueError, match="Invalid output filename"):
         MarkdownWriter().write_artifact(
             part,
             AgentResponse("content", "thread-1"),
