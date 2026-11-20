@@ -54,6 +54,13 @@ def write_spec(tmp_path: Path, data: object) -> Path:
     return path
 
 
+def test_bundled_example_matches_cli_default() -> None:
+    path = cli.parse_args([]).config.guide_spec
+    spec = load_course_spec(path)
+    assert [section.id for section in spec.sections] == ["SEC-01", "SEC-02"]
+    assert spec.required_blocks
+
+
 def test_load_preserves_section_order_and_sorts_blocks(tmp_path: Path) -> None:
     spec = load_course_spec(write_spec(tmp_path, sample_spec()))
     assert [section.id for section in spec.sections] == ["SEC-02", "SEC-01"]

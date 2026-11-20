@@ -46,7 +46,7 @@ def test_help_exits_successfully_without_running_generation(
 def test_no_section_ids_selects_all() -> None:
     arguments = cli.parse_args([])
     assert arguments.module_ids == ()
-    assert arguments.config.guide_spec == Path("prompts/guide_spec.yaml")
+    assert arguments.config.guide_spec == Path("prompts/example_course.yaml")
 
 
 def test_success_composes_adapters_and_reports_artifacts(

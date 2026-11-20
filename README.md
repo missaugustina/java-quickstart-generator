@@ -58,13 +58,13 @@ authentication and may consume service resources.
 Generate every section in YAML list order:
 
 ```shell
-uv run java-quickstart-generator --course-spec prompts/guide_spec.yaml
+uv run java-quickstart-generator --course-spec prompts/example_course.yaml
 ```
 
 Generate selected sections in the order entered:
 
 ```shell
-uv run java-quickstart-generator SEC-01 SEC-02 --course-spec prompts/guide_spec.yaml
+uv run java-quickstart-generator SEC-01 SEC-02 --course-spec prompts/example_course.yaml
 ```
 
 Optional arguments:
@@ -72,7 +72,7 @@ Optional arguments:
 | Argument | Default | Meaning |
 |---|---|---|
 | `SEC_ID ...` | All sections | Select sections in requested order |
-| `--course-spec PATH` | `prompts/guide_spec.yaml` | YAML course source |
+| `--course-spec PATH` | `prompts/example_course.yaml` | YAML course source |
 | `--prompt-template PATH` | Bundled Markdown template | Custom prompt wording and arrangement |
 | `--drafts-directory PATH` | `drafts` | Destination for drafts |
 | `--model MODEL` | Configured Codex default | Model override |
@@ -87,9 +87,10 @@ The first turn receives the complete specification. Later turns receive the curr
 shared section blocks, and continuity rules. Each draft is written to
 `drafts/<SECTION_ID>/01-section.md`. Move an existing draft before generating that section again.
 
-The local `prompts/guide_spec.yaml` contains a personal learner profile and is ignored by Git.
-Supply your own specification when using a fresh clone. The old Markdown prompt directories are
-not used by the CLI. Drafts remain visible to Git; review their contents before committing.
+The tracked `prompts/example_course.yaml` is a small, topic-neutral example available in a fresh
+clone. The local `prompts/guide_spec.yaml` contains a personal learner profile and is ignored by
+Git; select it explicitly with `--course-spec` to use it. Drafts remain visible to Git; review
+their contents before committing.
 `output/` remains reserved for future exports.
 
 ## Customize the prompt

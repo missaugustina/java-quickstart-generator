@@ -18,7 +18,7 @@ from java_quickstart_generator.models import GeneratorConfig
 from java_quickstart_generator.prompt_template import load_prompt_template
 from java_quickstart_generator.workflow import generate_yaml_course
 
-DEFAULT_GUIDE_SPEC = Path("prompts/guide_spec.yaml")
+DEFAULT_GUIDE_SPEC = Path("prompts/example_course.yaml")
 DEFAULT_DRAFTS_DIRECTORY = Path("drafts")
 
 
