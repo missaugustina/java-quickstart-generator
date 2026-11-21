@@ -87,9 +87,18 @@ cp -n prompts/example_course.yaml prompts/my_course.yaml
 ```
 
 Edit `course_context` to define your topic, audience, prerequisites, goal, assignment, and
-time budget. Update each section's purpose, topics, assignment connection, activity, and layout
-to support that assignment. Keep IDs unique and put sections in learning order. The complete
-YAML, including `course_context`, reaches the initial generation turn. Then select your copy:
+time budget. For each section:
+
+- Update `title` and `map_location` to match the new topic and its place in the course.
+- Update `purpose`, `topics`, `assignment_connection`, `activity`, and `layout` to support
+  the new assignment.
+- Check every duration in `map_location`, `activity`, and `layout`. Activity time is part
+  of the section's layout, so count it once. Check that the layout phases add up to each
+  section's time and that the section times add up to `course_context.time_budget_minutes`.
+
+Keep IDs unique and put sections in learning order. Review the copy for leftover topic names,
+assignments, and durations from the example. The complete YAML, including `course_context`,
+reaches the initial generation turn. Then select your copy:
 
 ```shell
 uv run quickstart-generator --course-spec prompts/my_course.yaml
