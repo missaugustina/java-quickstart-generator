@@ -1,4 +1,21 @@
-# Replace these example instructions with your own topic and learning goals.
+# Runnable demonstration course. Copy this file to customize its topic and learning goals.
+course_context:
+  title: Create a clear GitHub issue in 20 minutes
+  audience: Someone new to GitHub issues.
+  prerequisites:
+    - Access to a practice repository on GitHub with issues enabled.
+    - No knowledge of Git, branches, or pull requests is required.
+  learning_goal: >-
+    Understand what a GitHub issue records and write a clear issue that another person
+    can act on.
+  assignment: >-
+    Draft a GitHub issue about a README setup instruction that does not explain which
+    folder to run a command from. Describe the unclear instruction, the clarification
+    needed, and how to recognize that the documentation has been fixed.
+  time_budget_minutes: 20
+  completion_criteria: >-
+    Finish with a specific title and an actionable issue description. A completed draft
+    is sufficient; posting is optional and should be limited to the practice repository.
 guide_structure:
   sections:
     - id: SEC-01
