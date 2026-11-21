@@ -1,32 +1,96 @@
-# Replace these example instructions with your own topic and learning goals.
+# Runnable demonstration course. Copy this file to customize its topic and learning goals.
+course_context:
+  title: Create a clear GitHub issue in 20 minutes
+  audience: Someone new to GitHub issues.
+  prerequisites:
+    - A text editor to write and save the issue draft; GitHub access is optional.
+    - Access to a practice repository on GitHub with issues enabled only if choosing to post.
+    - No knowledge of Git, branches, or pull requests is required.
+  learning_goal: >-
+    Understand what a GitHub issue records and write a clear issue that another person
+    can act on.
+  assignment: >-
+    Draft a GitHub issue about a README setup instruction that does not explain which
+    folder to run a command from. Describe the unclear instruction, the clarification
+    needed, and how to recognize that the documentation has been fixed.
+  time_budget_minutes: 20
+  completion_criteria: >-
+    Finish with a specific title and an actionable issue description. A completed draft
+    is sufficient; posting is optional and should be limited to the practice repository.
 guide_structure:
   sections:
     - id: SEC-01
-      title: Orientation
-      map_location: Start of the course
-      purpose: Give the learner a map of the subject and its main parts.
+      title: Understand and outline a GitHub issue
+      map_location: First 8 minutes of the 20-minute course, before writing the full issue.
+      purpose: >-
+        Explain how a GitHub issue records a problem for others to act on, then help
+        the learner outline an issue about an unclear README setup instruction.
       topics:
-        - What the subject covers
-        - How its main parts connect
-      assignment_connection: Identify where an assigned task fits on the map.
-      activity: Draw or write a short map of the subject.
+        - The purpose of a GitHub issue and the role of a README as project instructions.
+        - The observed problem, the expected result, and details that help someone investigate.
+        - A clear completion check that tells the reader when the documentation is fixed.
+      assignment_connection: >-
+        Prepare notes for the course assignment: a GitHub issue about a README setup
+        command whose working folder is unspecified. These notes become the full
+        issue draft in SEC-02. No Git, branch, or pull request knowledge is needed.
+      activity: >-
+        In 4 minutes, outline the README issue using four labeled notes: problem,
+        expected result, supporting details, and completion check. Use the fictional
+        setup instruction from the worked example. Describe only what the example
+        establishes; do not invent an error message or a command result.
       layout:
-        - Brief overview
-        - Text-based map
-        - Practice prompt
+        - >-
+          2 minutes — Explain an issue and a README in plain language. Show this text
+          sequence: observe a problem -> outline it -> write the issue -> check clarity.
+          Identify outlining as this section's task.
+        - >-
+          2 minutes — Provide a short worked example labeled as fictional. The README
+          says "Run the setup command" without naming the folder. Show the problem
+          (the reader cannot tell where to run it), expected result (the instructions
+          name the folder), supporting detail (the quoted instruction in the Setup
+          section), and completion check (a new reader can identify the folder).
+        - >-
+          4 minutes — Present the four-note outline activity. End by asking the learner
+          to check that each note describes the same README problem and keep the
+          outline for SEC-02. A written outline is the deliverable for this section.
     - id: SEC-02
-      title: First application
-      map_location: After orientation
-      purpose: Apply one idea from the map to a small task.
+      title: Write and check a GitHub issue
+      map_location: Final 12 minutes of the 20-minute course, using the outline from SEC-01.
+      purpose: >-
+        Turn the README outline into a GitHub issue draft with a specific title,
+        a clear description, and a completion check another reader can use.
       topics:
-        - Choosing a relevant idea
-        - Checking the result
-      assignment_connection: Use the idea on a small part of the assigned task.
-      activity: Try the idea, then explain what happened.
+        - A specific title that names the unclear README setup instruction.
+        - A description with the observed problem, expected result, and supporting details.
+        - Steps to locate the unclear instruction when useful, without inventing command results.
+        - A completion check and a final review for clarity and missing information.
+      assignment_connection: >-
+        Complete the same documentation assignment from SEC-01: report that the
+        fictional README says "Run the setup command" without naming the working
+        folder. Use the four-note outline to write an actionable issue draft.
+      activity: >-
+        In 6 minutes, write a title and description for the fictional README problem.
+        Include the quoted instruction, where it appears, the clarification needed,
+        and how a new reader could verify the fix. Add steps to locate the instruction
+        if helpful. Use only the scenario's facts; do not invent an error message,
+        folder name, or test result. Save the draft for the final clarity check.
       layout:
-        - Worked example
-        - Practice prompt
-        - Reflection
+        - >-
+          3 minutes — Connect this section to the SEC-01 outline. Provide a short
+          fictional issue draft with a specific title and labeled problem, expected
+          result, supporting details, and completion check. Explain how each part
+          helps another person understand and act on the README problem.
+        - >-
+          6 minutes — Guide the drafting activity. Offer a small fill-in structure
+          for the title and description. Keep all instructions understandable without
+          knowledge of Git, branches, or pull requests.
+        - >-
+          3 minutes — Check the draft: does the title name the problem, can a reader
+          locate the quoted instruction, is the requested clarification clear, and
+          can someone recognize the fix? Revise missing or unclear details. A saved
+          draft completes the exercise. Posting is optional, only in a practice
+          repository, and the fictional example must be labeled as practice rather
+          than presented as a verified defect in a real project.
 section_template:
   required_blocks:
     - order: 1
