@@ -19,18 +19,39 @@ course_context:
 guide_structure:
   sections:
     - id: SEC-01
-      title: Orientation
-      map_location: Start of the course
-      purpose: Give the learner a map of the subject and its main parts.
+      title: Understand and outline a GitHub issue
+      map_location: First 8 minutes of the 20-minute course, before writing the full issue.
+      purpose: >-
+        Explain how a GitHub issue records a problem for others to act on, then help
+        the learner outline an issue about an unclear README setup instruction.
       topics:
-        - What the subject covers
-        - How its main parts connect
-      assignment_connection: Identify where an assigned task fits on the map.
-      activity: Draw or write a short map of the subject.
+        - The purpose of a GitHub issue and the role of a README as project instructions.
+        - The observed problem, the expected result, and details that help someone investigate.
+        - A clear completion check that tells the reader when the documentation is fixed.
+      assignment_connection: >-
+        Prepare notes for the course assignment: a GitHub issue about a README setup
+        command whose working folder is unspecified. These notes become the full
+        issue draft in SEC-02. No Git, branch, or pull request knowledge is needed.
+      activity: >-
+        In 4 minutes, outline the README issue using four labeled notes: problem,
+        expected result, supporting details, and completion check. Use the fictional
+        setup instruction from the worked example. Describe only what the example
+        establishes; do not invent an error message or a command result.
       layout:
-        - Brief overview
-        - Text-based map
-        - Practice prompt
+        - >-
+          2 minutes — Explain an issue and a README in plain language. Show this text
+          sequence: observe a problem -> outline it -> write the issue -> check clarity.
+          Identify outlining as this section's task.
+        - >-
+          2 minutes — Provide a short worked example labeled as fictional. The README
+          says "Run the setup command" without naming the folder. Show the problem
+          (the reader cannot tell where to run it), expected result (the instructions
+          name the folder), supporting detail (the quoted instruction in the Setup
+          section), and completion check (a new reader can identify the folder).
+        - >-
+          4 minutes — Present the four-note outline activity. End by asking the learner
+          to check that each note describes the same README problem and keep the
+          outline for SEC-02. A written outline is the deliverable for this section.
     - id: SEC-02
       title: First application
       map_location: After orientation
