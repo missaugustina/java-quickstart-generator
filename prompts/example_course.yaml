@@ -3,7 +3,8 @@ course_context:
   title: Create a clear GitHub issue in 20 minutes
   audience: Someone new to GitHub issues.
   prerequisites:
-    - Access to a practice repository on GitHub with issues enabled.
+    - A text editor to write and save the issue draft; GitHub access is optional.
+    - Access to a practice repository on GitHub with issues enabled only if choosing to post.
     - No knowledge of Git, branches, or pull requests is required.
   learning_goal: >-
     Understand what a GitHub issue records and write a clear issue that another person

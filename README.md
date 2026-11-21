@@ -60,7 +60,9 @@ The bundled example is **Create a clear GitHub issue in 20 minutes**. It introdu
 issues through a fictional README setup instruction that does not name the folder in which
 to run a command. The learner outlines the problem, writes an issue draft, and checks that
 another person could act on it. A saved draft completes the exercise; posting is optional
-and limited to a practice repository. No Git, branch, or pull request knowledge is required.
+and limited to a practice repository. The draft-only exercise can be completed in a text
+editor; GitHub repository access is needed only if the learner chooses to post. No Git,
+branch, or pull request knowledge is required.
 
 | Section | Learner time | Result |
 |---|---|---|
