@@ -52,25 +52,47 @@ The equivalent module command is:
 uv run python -m quickstart_generator --help
 ```
 
-The following generation commands invoke the configured Codex service. They may require
+Run these commands from the repository root. The following generation commands invoke the
+configured Codex service. They may require
 authentication and may consume service resources.
 
-Generate the two sections in the bundled example, in YAML list order:
+The bundled example is **Create a clear GitHub issue in 20 minutes**. It introduces GitHub
+issues through a fictional README setup instruction that does not name the folder in which
+to run a command. The learner outlines the problem, writes an issue draft, and checks that
+another person could act on it. A saved draft completes the exercise; posting is optional
+and limited to a practice repository. No Git, branch, or pull request knowledge is required.
+
+| Section | Learner time | Result |
+|---|---|---|
+| `SEC-01` | 8 minutes | Four notes outlining the README problem |
+| `SEC-02` | 12 minutes | A clear issue title and description, checked for missing details |
+
+The 20 minutes describe the learner's exercise, not the generator's runtime. Generate both
+sections in YAML order, with each Markdown draft saved under `drafts/<SECTION_ID>/01-section.md`:
 
 ```shell
 uv run quickstart-generator
 ```
 
-Generate selected example sections in the order entered:
+Generate only the first section:
 
 ```shell
-uv run quickstart-generator SEC-02 SEC-01
+uv run quickstart-generator SEC-01
 ```
 
-Generate from your own YAML specification:
+To create a course on another topic, copy the example to a new file:
 
 ```shell
-uv run quickstart-generator --course-spec prompts/guide_spec.yaml
+cp -n prompts/example_course.yaml prompts/my_course.yaml
+```
+
+Edit `course_context` to define your topic, audience, prerequisites, goal, assignment, and
+time budget. Update each section's purpose, topics, assignment connection, activity, and layout
+to support that assignment. Keep IDs unique and put sections in learning order. The complete
+YAML, including `course_context`, reaches the initial generation turn. Then select your copy:
+
+```shell
+uv run quickstart-generator --course-spec prompts/my_course.yaml
 ```
 
 Optional arguments:
@@ -93,8 +115,9 @@ The first turn receives the complete specification. Later turns receive the curr
 shared section blocks, and continuity rules in the same Codex thread. Each draft is written to
 `drafts/<SECTION_ID>/01-section.md`. Move an existing draft before generating that section again.
 
-The tracked `prompts/example_course.yaml` is a small, topic-neutral example available in a fresh
-clone. Copy it to another path and edit its sections to describe your own course. On this machine,
+The tracked `prompts/example_course.yaml` contains the GitHub demonstration course and is
+available in a fresh clone. Custom course copies are visible to Git unless you ignore them.
+On this machine,
 `prompts/guide_spec.yaml` is an ignored personal specification; it is absent from a fresh clone.
 Select a personal file explicitly with `--course-spec`. Drafts remain visible to Git; review
 their contents before committing. `output/` remains reserved for future exports.
